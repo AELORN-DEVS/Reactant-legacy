@@ -10,7 +10,7 @@ import dev.reactant.reactant.extra.file.FileIOUploadService
 import dev.reactant.reactant.extra.parser.GsonJsonParserService
 import dev.reactant.reactant.utils.PatternMatchingUtils
 import dev.reactant.reactant.utils.formatting.MultiColumns
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import picocli.CommandLine
 import java.util.regex.Pattern
 import kotlin.reflect.jvm.jvmErasure
@@ -93,7 +93,7 @@ internal class ReactantComponentListSubCommand(
                 if (export) {
                     stdout.out("Exporting components...")
                     jsonParserService.encode(it).flatMap {
-                        fileIOUploadService.upload("component-list.json", it, MediaType.parse("application/json")!!)
+                        fileIOUploadService.upload("component-list.json", it, "application/json".toMediaType())
                     }.subscribe { resp -> stdout.out("Exported and uploaded to ${resp.link}") }
                 } else {
                     it.forEach { addToListTable(it) }

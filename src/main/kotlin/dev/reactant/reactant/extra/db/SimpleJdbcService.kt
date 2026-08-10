@@ -41,7 +41,7 @@ class SimpleJdbcService : LifeCycleHook, JdbcService {
                 .subscribeOn(Schedulers.io())
                 .observeOn(dev.reactant.reactant.core.ReactantCore.mainThreadScheduler)
 
-        override fun <T> executeQuery(onNext: ResultSet.() -> T): Observable<T> =
+        override fun <T : Any> executeQuery(onNext: ResultSet.() -> T): Observable<T> =
                 executeQueryToResultSet()
                         .subscribeOn(Schedulers.io())
                         .flatMapObservable { resultSet ->

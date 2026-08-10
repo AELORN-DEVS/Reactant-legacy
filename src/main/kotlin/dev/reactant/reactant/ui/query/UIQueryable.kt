@@ -27,7 +27,6 @@ interface UIQueryable {
     /**
      * @return 0 if it is this itself, positive value if it is a child of this, negative value if it is a parent of it, nothing if they do not have parent/child relation.
      */
-    @JvmDefault
     fun distanceTo(queryable: UIQueryable): Int? {
         if (queryable == this) return 0
         else {
@@ -64,7 +63,6 @@ interface UIQueryable {
     /**
      * Find closest children, not including this itself
      */
-    @JvmDefault
     fun closestChild(selector: String): UIElement? = querySelectorAll(selector)
             .asSequence()
             .map { it to this.distanceTo(it) }
@@ -72,7 +70,6 @@ interface UIQueryable {
             .sortedBy { it.second }
             .map { it.first }.firstOrNull()
 
-    @JvmDefault
     fun closest(selector: String): UIElement? = rootElement?.querySelectorAll(selector)
             ?.asSequence()
             ?.map { it to this.distanceTo(it) }
@@ -81,7 +78,6 @@ interface UIQueryable {
             ?.map { it.first }?.firstOrNull()
 
 
-    @JvmDefault
     fun querySelectorAll(selector: String): Set<UIElement> = selectElements(this, parser.parseSelectors(InputSource(StringReader(selector))))
 
 
@@ -89,7 +85,6 @@ interface UIQueryable {
      * Check is the element match the selector in parent's view
      * Root element will always return false
      */
-    @JvmDefault
     fun matches(selector: String): Boolean = this.rootElement?.querySelectorAll(selector)?.contains(this) ?: false
 
     companion object {

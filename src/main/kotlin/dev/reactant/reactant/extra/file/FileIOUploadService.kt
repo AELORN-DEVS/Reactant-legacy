@@ -5,8 +5,10 @@ import dev.reactant.reactant.extra.net.BaseUrl
 import dev.reactant.reactant.extra.net.RetrofitJsonAPI
 import io.reactivex.rxjava3.core.Single
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -29,12 +31,12 @@ class FileIOUploadService(
         fun uploadFile(@Part file: MultipartBody.Part): Single<FileIOResponse>
     }
 
-    fun upload(fileName: String, content: String, mediaType: MediaType = MediaType.parse("text/plain")!!): Single<FileIOResponse> {
-        return fileIOAPI.service.uploadFile(MultipartBody.Part.createFormData("file", fileName, RequestBody.create(mediaType, content)))
+    fun upload(fileName: String, content: String, mediaType: MediaType = "text/plain".toMediaType()): Single<FileIOResponse> {
+        return fileIOAPI.service.uploadFile(MultipartBody.Part.createFormData("file", fileName, content.toRequestBody(mediaType)))
     }
 
     fun upload(fileName: String, content: File, mediaType: MediaType): Single<FileIOResponse> {
-        return fileIOAPI.service.uploadFile(MultipartBody.Part.createFormData("file", fileName, RequestBody.create(mediaType, content)))
+        return fileIOAPI.service.uploadFile(MultipartBody.Part.createFormData("file", fileName, content.asRequestBody(mediaType)))
     }
 }
 

@@ -294,6 +294,7 @@ fun UIView.setAsSlotView(playerInventoryQuickPutTarget: ItemStorage, dropCursorW
                     }
                 }
             }
+            else -> run { }
         }
     }
     if (dropCursorWhenClose) this.event.ofType(UICloseEvent::class.java).subscribe {

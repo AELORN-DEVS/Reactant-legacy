@@ -10,7 +10,7 @@ interface JdbcService {
     interface ServicePreparedStatement {
         fun config(configFunc: PreparedStatement.() -> Unit): ServicePreparedStatement
         fun execute(): Single<Boolean>
-        fun <T> executeQuery(onNext: ResultSet.() -> T): Observable<T>
+        fun <T : Any> executeQuery(onNext: ResultSet.() -> T): Observable<T>
         fun executeQueryToResultSet(): Single<ResultSet>
         fun executeBatch(): Single<IntArray>
         val connection: ServiceConnection

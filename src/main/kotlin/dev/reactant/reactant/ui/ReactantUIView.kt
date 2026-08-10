@@ -99,5 +99,5 @@ class ReactantUIView(val allocatedSchedulerService: SchedulerService, private va
 }
 
 inline fun <reified T : UIEvent> ReactantUIView.event(): Observable<T> {
-    return event.filter { it is T }.map { it as? T }
+    return event.filter { it is T }.map { it as T }
 }

@@ -1,24 +1,24 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.net.URI
 
-val kotlinVersion = "1.5.10"
+val kotlinVersion = "2.4.10"
 
 group = "dev.reactant"
 
 plugins {
-    java
+    `java-library`
     `maven-publish`
     signing
-    kotlin("jvm") version "1.5.10"
-    id("com.github.johnrengelman.shadow") version "5.2.0"
-    id("org.jetbrains.dokka") version "1.4.32"
-    id("com.palantir.git-version") version "0.12.3"
+    kotlin("jvm") version "2.4.10"
+    id("com.gradleup.shadow") version "9.6.1"
+    id("org.jetbrains.dokka") version "2.2.0"
+    id("org.jetbrains.dokka-javadoc") version "2.2.0"
+    id("com.palantir.git-version") version "5.0.0"
 }
 
 group = "dev.reactant"
-val gitVersion: groovy.lang.Closure<String> by extra
-val versionDetails: groovy.lang.Closure<String> by extra
+val versionDetails = extra["versionDetails"] as groovy.lang.Closure<*>
 val details = versionDetails() as com.palantir.gradle.gitversion.VersionDetails
 version = details.lastTag + if (!details.isCleanTag && !details.lastTag.endsWith("-SNAPSHOT")) "-SNAPSHOT" else ""
 val isRelease = details.isCleanTag && !details.lastTag.endsWith("-SNAPSHOT")
@@ -26,17 +26,23 @@ val isRelease = details.isCleanTag && !details.lastTag.endsWith("-SNAPSHOT")
 println("Preparing build ${project.name} $version")
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
-    kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=compatibility")
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_25)
+        freeCompilerArgs.add("-jvm-default=enable")
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.release.set(25)
 }
 
 repositories {
-    jcenter()
     mavenCentral()
     maven { url = URI.create("https://hub.spigotmc.org/nexus/content/repositories/snapshots") }
     maven { url = URI.create("https://oss.sonatype.org/content/repositories/snapshots/") }
@@ -54,36 +60,30 @@ dependencies {
 //            "scripting-compiler"
     ).forEach { api(kotlin(it, kotlinVersion)) }
 
-    implementation("org.bstats:bstats-bukkit:1.7") {
-        isTransitive = false
-    }
+    implementation("org.bstats:bstats-bukkit:3.2.1")
 
-    api("io.reactivex.rxjava3:rxjava:3.0.9")
+    api("io.reactivex.rxjava3:rxjava:3.1.12")
     api("io.reactivex.rxjava3:rxkotlin:3.0.1")
-    api("io.github.classgraph:classgraph:4.8.106")
+    api("io.github.classgraph:classgraph:4.8.189")
 
-    api("com.google.code.gson:gson:2.8.6")
-    api("org.yaml:snakeyaml:1.26")
+    api("com.google.code.gson:gson:2.14.0")
+    api("org.yaml:snakeyaml:2.6")
     api("com.moandjiezana.toml:toml4j:0.7.2")
 
-    api("info.picocli:picocli:4.3.2")
-    api("org.mariadb.jdbc:mariadb-java-client:2.5.1")
+    api("info.picocli:picocli:4.7.7")
+    api("org.mariadb.jdbc:mariadb-java-client:3.5.10")
 
-    api("org.apache.logging.log4j:log4j-core:2.12.1")
+    api("org.apache.logging.log4j:log4j-core:2.26.1")
 
-    api("com.squareup.retrofit2:retrofit:2.9.0")
-    api("com.squareup.retrofit2:adapter-rxjava3:2.9.0")
-    api("com.squareup.retrofit2:converter-gson:2.9.0")
+    api("com.squareup.retrofit2:retrofit:3.0.0")
+    api("com.squareup.retrofit2:adapter-rxjava3:3.0.0")
+    api("com.squareup.retrofit2:converter-gson:3.0.0")
 
-    api("net.sourceforge.cssparser:cssparser:0.9.27")
+    api("net.sourceforge.cssparser:cssparser:0.9.30")
 
-    api("javassist:javassist:3.12.1.GA")
+    api("org.javassist:javassist:3.32.0-GA")
 
-    compileOnly("org.spigotmc:spigot-api:1.16.4-R0.1-SNAPSHOT")
-}
-
-tasks.dokkaJavadoc.configure {
-    outputDirectory.set(buildDir.resolve("javadoc"))
+    compileOnly("org.spigotmc:spigot-api:26.2-R0.1-SNAPSHOT")
 }
 
 gradle.taskGraph.whenReady {
@@ -94,19 +94,19 @@ gradle.taskGraph.whenReady {
     }
 }
 
-val sourcesJar by tasks.registering(Jar::class) {
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
     dependsOn(JavaPlugin.CLASSES_TASK_NAME)
     archiveClassifier.set("sources")
     from(sourceSets.main.get().allSource)
 }
 
-val javadocJar by tasks.registering(Jar::class) {
-    dependsOn(tasks.dokkaJavadoc)
+val javadocJar = tasks.register<Jar>("javadocJar") {
     archiveClassifier.set("javadoc")
-    from(tasks.javadoc)
+    from(tasks.named("dokkaGeneratePublicationJavadoc"))
 }
 
-val shadowJar = (tasks["shadowJar"] as ShadowJar).apply {
+val shadowJar = tasks.named<ShadowJar>("shadowJar") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     relocate("org.bstats", "dev.reactant.reactant.core")
     relocate("okhttp3", "dev.reactant.reactant.okhttp3")
     relocate("okio", "dev.reactant.reactant.okio")
@@ -114,14 +114,12 @@ val shadowJar = (tasks["shadowJar"] as ShadowJar).apply {
     relocate("javassist", "dev.reactant.reactant.javassist")
 }
 
-val dokkaJar by tasks.registering(Jar::class) {
-    dependsOn(tasks.dokkaHtml)
+val dokkaJar = tasks.register<Jar>("dokkaJar") {
     archiveClassifier.set("dokka")
-    from(tasks.dokkaHtml)
+    from(tasks.named("dokkaGeneratePublicationHtml"))
 }
 
-val deployPlugin by tasks.registering(Copy::class) {
-    dependsOn(shadowJar)
+val deployPlugin = tasks.register<Copy>("deployPlugin") {
     System.getenv("PLUGIN_DEPLOY_PATH")?.let {
         from(shadowJar)
         into(it)
@@ -178,7 +176,6 @@ publishing {
 
     repositories {
         maven {
-
             val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
             val snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
             url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
@@ -193,8 +190,8 @@ publishing {
 if (isRelease) {
     signing {
         ext["signing.keyId"] = findProperty("signingKeyId") as String?
-        val signingKey: String? by project
-        val signingPassword: String? by project
+        val signingKey = findProperty("signingKey") as String?
+        val signingPassword = findProperty("signingPassword") as String?
         useInMemoryPgpKeys(signingKey?.replace("\\n", "\n"), signingPassword)
         sign(publishing.publications["maven"])
     }

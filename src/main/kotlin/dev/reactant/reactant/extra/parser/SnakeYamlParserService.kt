@@ -5,6 +5,7 @@ import dev.reactant.reactant.core.dependency.layers.SystemLevel
 import dev.reactant.reactant.service.spec.parser.YamlParserService
 import io.reactivex.rxjava3.core.Single
 import org.yaml.snakeyaml.DumperOptions
+import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
 import org.yaml.snakeyaml.nodes.Tag
@@ -18,8 +19,9 @@ open class SnakeYamlParserService : YamlParserService, SystemLevel {
         indent = 2
         isPrettyFlow = true
     }
+    protected val loaderOptions = LoaderOptions()
     protected val representer = Representer(options)
-    protected val yaml = Yaml(CustomClassLoaderConstructor(this.javaClass.classLoader), representer, options)
+    protected val yaml = Yaml(CustomClassLoaderConstructor(this.javaClass.classLoader, loaderOptions), representer, options)
 
     override fun encode(obj: Any, prettyPrint: Boolean): Single<String> =
             Single.defer {

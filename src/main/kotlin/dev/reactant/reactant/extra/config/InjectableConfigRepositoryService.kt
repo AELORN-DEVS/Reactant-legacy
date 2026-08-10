@@ -68,7 +68,7 @@ private class InjectableConfigRepositoryService(
                         .flatMap { result ->
                             when {
                                 result.any { it.second.isOnError } -> Single.error { ConfigDecodeException(result.filter { it.second.isOnError }.map { it.first to it.second.error!! }.toMap()) }
-                                else -> Single.just(result.map { it.second.value })
+                                else -> Single.just(result.mapNotNull { it.second.value })
                             }
                         }.flattenAsObservable { it }
 

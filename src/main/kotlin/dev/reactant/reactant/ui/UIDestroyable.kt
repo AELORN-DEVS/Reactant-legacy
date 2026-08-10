@@ -18,7 +18,7 @@ interface UIDestroyable {
     val event: Observable<out UIEvent>
     fun destroy()
 
-    fun <T> subscribe(observable: Observable<T>, onNext: (T) -> Unit): Disposable =
+    fun <T : Any> subscribe(observable: Observable<T>, onNext: (T) -> Unit): Disposable =
             observable.doOnDispose { compositeDisposable.isDisposed }
                     .subscribe(onNext)
                     .also { compositeDisposable.add(it) }

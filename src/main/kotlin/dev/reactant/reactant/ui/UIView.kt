@@ -17,7 +17,6 @@ interface UIView : UIEventTarget<UIEvent>, UIQueryable, UIDestroyable {
      */
     val inventoryViews get() = inventory.viewers.mapNotNull { it as? Player }.map { it to it.openInventory }.toMap()
 
-    @JvmDefault
     fun getElementAt(index: Int) = getElementAt(index % 9, index / 9)
 
     fun getElementAt(x: Int, y: Int): UIElement?

@@ -12,7 +12,8 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
 import okhttp3.ResponseBody
-import okio.Okio
+import okio.buffer
+import okio.sink
 import org.bukkit.Bukkit
 import org.bukkit.plugin.InvalidDescriptionException
 import org.bukkit.plugin.PluginDescriptionFile
@@ -134,7 +135,7 @@ class RepositoryRetrieveSubCommand(
         return Observable.fromIterable(requests).flatMapSingle {
             it.doOnSuccess { responseBody ->
                 downloadTo.createNewFile()
-                Okio.buffer(Okio.sink(downloadTo)).apply {
+                downloadTo.sink().buffer().apply {
                     writeAll(responseBody.source())
                     close()
                 }
